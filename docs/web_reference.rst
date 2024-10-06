@@ -1217,8 +1217,34 @@ and :ref:`aiohttp-web-signals` handlers::
 
       :return: :class:`~aiohttp.WSMessage`
 
-      :raise RuntimeError: if connection is not started
+      :raise RuntimeError: This exception is raised in the following situations:
+      
+          #. If the function is called before the :meth:`prepare`.
+          
+          #. If a concurrent call to :meth:`receive` is made.
+          
+          #. If the WebSocket connection is closed and the connection lost 
+             count exceeds the threshold.
 
+      :raise asyncio.TimeoutError: This exception is raised if no message
+       is received within the specified timeout.
+
+      The other exceptions are caught within the method and handled by closing 
+      the connection and returning a :class:`~aiohttp.WSMessage` with 
+      the :const:`~aiohttp.WSMsgType.ERROR` or :const:`~aiohttp.WSMsgType.CLOSED` type.
+
+          #. EofStream: Indicates the end of the stream. 
+             The connection is closed normally and a :class:`~aiohttp.WSMessage` 
+             of type :const:`~aiohttp.WSMsgType.CLOSED` is returned.
+
+          #. WebSocketError: Indicates a problem with the WebSocket connection or message.
+             The connection is closed with the error code and a :class:`~aiohttp.WSMessage`
+             of type :const:`~aiohttp.WSMsgType.ERROR` containing the exception is returned.
+
+          #. Exception: Catches any other exceptions. The connection is closed abnormally
+             and a :class:`~aiohttp.WSMessage` of type :const:`~aiohttp.WSMsgType.ERROR`
+             containing the exception is returned.
+      
    .. method:: receive_str(*, timeout=None)
       :async:
 
